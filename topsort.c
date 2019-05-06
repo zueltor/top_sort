@@ -22,40 +22,47 @@ unsigned int dfs(int *colors, int *stack, int *k, edges *graf, int n, int cur_ve
     return 0;
 }
 
-int topsort(void) {
+void topsort(char *in, char *out) {
     int n_vertices,
             n_edges,
             i;
     unsigned int err;
 
-    FILE *f1 = fopen("in.txt", "rb");
-    FILE *f2 = fopen("out.txt", "wb");
+    FILE *f1 = fopen(in, "rb");
+    FILE *f2 = fopen(out, "wb");
     if (f1 == NULL) {
-        return 1;
+        errors(1);
+        return;
     }
     if (f2 == NULL) {
-        return 1;
+        errors(1);
+        return;
     }
     fseek(f1, 0, SEEK_END);
     int size = ftell(f1);
     if (size == 0) {
-        return 2;
+        errors(2);
+        return;
     }
     fseek(f1, 0, SEEK_SET);
 
     if (fscanf(f1, "%d", &n_vertices)) {
         if (n_vertices < 0 || n_vertices > 1000) {
-            return 3;
+            errors(3);
+            return;
         }
     } else {
-        return 2;
+        errors(2);
+        return;
     }
 
     if (fscanf(f1, "%d", &n_edges) != 1) {
-        return 2;
+        errors(2);
+        return;
     }
     if (n_edges < 0 || n_edges > n_vertices * (n_vertices - 1) / 2) {
-        return 4;
+        errors(4);
+        return;
     }
 
     edges *graf = malloc((unsigned int) n_edges * sizeof(edges));
@@ -65,13 +72,16 @@ int topsort(void) {
             if (graf[i].from < 1 || graf[i].from > n_vertices ||
                 graf[i].to < 1 || graf[i].to > n_vertices) {
                 free(graf);
-                return 5;
+                errors(5);
+                return;
             }
         } else {
-            return 2;
+            errors(2);
+            return;
         }
 
     }
+
     unsigned int k = 0;
     int *stack = malloc(n_vertices * sizeof(int));
     int *colors = malloc((n_vertices + 1) * sizeof(int));
@@ -84,21 +94,22 @@ int topsort(void) {
                 free(stack);
                 free(colors);
                 free(graf);
-                return 6;
+                errors(6);
+                return;
             }
         }
     }
 
     for (i = k - 1; i >= 0; i--) {
-        printf("%d ", stack[i]);
+        fprintf(f2, "%d ", stack[i]);
     }
+
     free(stack);
     free(colors);
     free(graf);
-    return 0;
 }
 
-void errors(int err) {
+int errors(int err) {
     switch (err) {
         case 1:
             printf("file cannot be opened");
@@ -112,5 +123,11 @@ void errors(int err) {
             printf("bad vertex");
         case 6:
             printf("impossible to sort");
+        default:;
     }
+    return 1;
+}
+
+void print_help(void) {
+    printf("Topsort: <inputfile> <outputfile>");
 }

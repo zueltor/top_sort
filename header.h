@@ -11,6 +11,8 @@ struct edges {
 
 unsigned int dfs(int *colors, int *stack, int *k, edges *graf, int n, int cur_ver);
 
-int topsort(void);
+void topsort(char *in, char *out);
 
-void errors(int err);
+int errors(int err);
+
+void print_help(void);
