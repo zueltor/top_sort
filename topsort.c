@@ -3,23 +3,38 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned int dfs(int *colors, int *stack, int *k, edges *graf, int n, int cur_ver) {
-    if (colors[cur_ver] == GRAY) {
+unsigned int visit(Graph *G, int *stack, int u, int *colors, int *i) {
+    if (colors[u] == GRAY) {
         return 1;
     }
-    colors[cur_ver] = GRAY;
-    for (int i = 0; i < n; i++) {
-        if (graf[i].from == cur_ver && colors[graf[i].to] != BLACK) {
-            int err = dfs(colors, stack, k, graf, n, graf[i].to);
-            if (err)
+
+    colors[u]=GRAY;
+    List *p=G->Adj[u].next;
+    while (p!=NULL) {
+        if (colors[p->v]!=BLACK){
+            if (visit(G,stack,p->v,colors,i))
                 return 1;
         }
+        p=p->next;
     }
+    stack[*i]=u;
+    *i+=1;
 
-    colors[cur_ver] = BLACK;
-    stack[*k] = cur_ver;
-    *k += 1;
+    colors[u] = BLACK;
     return 0;
+}
+
+Graph *create_graph(unsigned int n_vertices, unsigned int n_edges) {
+    int i;
+    Graph *G = (Graph *) malloc(sizeof(Graph));
+    G->V = n_vertices;
+    G->E = n_edges;
+    G->Adj = (List *) malloc((G->V + 1) * sizeof(List));
+    for (i = 1; i <= G->V; i++) {
+        G->Adj[i].v = i;
+        G->Adj[i].next = NULL;
+    }
+    return G;
 }
 
 void topsort(char *in, char *out) {
@@ -65,21 +80,27 @@ void topsort(char *in, char *out) {
         return;
     }
 
-    edges *graf = malloc((unsigned int) n_edges * sizeof(edges));
+    Graph *G=create_graph(n_vertices,n_edges);
 
-    for (i = 0; i < n_edges; i++) {
-        if (fscanf(f1, "%d %d", &graf[i].from, &graf[i].to) == 2) {
-            if (graf[i].from < 1 || graf[i].from > n_vertices ||
-                graf[i].to < 1 || graf[i].to > n_vertices) {
-                free(graf);
+    int v1,v2;
+    List *tmp;
+
+    for (i = 0; i < G->E; i++) {
+        if (fscanf(f1, "%d %d", &v1, &v2) == 2) {
+            if (v1 < 1 || v1 > G->V || v2 < 1 || v2 > G->V) {
+                free_graph(G);
                 errors(5);
                 return;
             }
         } else {
+            free_graph(G);
             errors(2);
             return;
         }
-
+        tmp = (List *) malloc(sizeof(List));
+        tmp->v = v2;
+        tmp->next = G->Adj[v1].next;
+        G->Adj[v1].next = tmp;
     }
 
     unsigned int k = 0;
@@ -87,13 +108,13 @@ void topsort(char *in, char *out) {
     int *colors = malloc((n_vertices + 1) * sizeof(int));
     memset(colors, WHITE, sizeof(colors) * (n_vertices + 1));
 
-    for (i = 1; i <= n_vertices; i++) {
+    for (i = 1; i <= G->V; i++) {
         if (colors[i] == WHITE) {
-            err = dfs(colors, stack, &k, graf, n_edges, i);
+            err = visit(G,stack, i, colors, &k);
             if (err) {
                 free(stack);
                 free(colors);
-                free(graf);
+                free_graph(G);
                 errors(6);
                 return;
             }
@@ -106,10 +127,18 @@ void topsort(char *in, char *out) {
 
     free(stack);
     free(colors);
-    free(graf);
+    free_graph(G);
+    fclose(f1);
+    fclose(f2);
 }
 
-int errors(int err) {
+void free_graph(Graph *G) {
+    unsigned int i;
+    free(G->Adj);
+    free(G);
+}
+
+void errors(int err) {
     switch (err) {
         case 1:
             printf("file cannot be opened");
@@ -125,7 +154,6 @@ int errors(int err) {
             printf("impossible to sort");
         default:;
     }
-    return 1;
 }
 
 void print_help(void) {

@@ -9,10 +9,27 @@ struct edges {
     int to;
 };
 
-unsigned int dfs(int *colors, int *stack, int *k, edges *graf, int n, int cur_ver);
+typedef struct List List;
+struct List{
+    int v;
+    List *next;
+};
+
+typedef struct Graph Graph;
+struct Graph{
+    int V;
+    int E;
+    List *Adj;
+};
+
+Graph *create_graph(unsigned int n_vertices, unsigned int n_edges);
+
+void free_graph(Graph *G);
+
+unsigned int visit(Graph *G, int *stack, int u, int *colors, int *i);
 
 void topsort(char *in, char *out);
 
-int errors(int err);
+void errors(int err);
 
 void print_help(void);
